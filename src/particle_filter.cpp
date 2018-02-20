@@ -161,6 +161,9 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 
     // Step4: Calculate particle's weight
     double weight = 1.0;
+    vector<int> associations;
+    vector<double> sense_x;
+    vector<double> sense_y;
     for (auto trans_o : trans_observations) {
       int id = trans_o.id;
       double obs_x = trans_o.x;
@@ -171,13 +174,17 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
           double mu_y = pred.y;
           double exponent = pow((obs_x - mu_x), 2) / (2 * pow(sig_x, 2)) + pow((obs_y - mu_y), 2) / (2 * pow(sig_y, 2));
           weight *= gauss_norm * exp(-exponent);
+          associations.push_back(id);
+          sense_x.push_back(obs_x);
+          sense_y.push_back(obs_y);
           break;
         }
       }
     } // for (auto trans_o : trans_observations)
     particles[i].weight = weight;
     weights[i] = weight;
-  } // for (decltype(observations.size()) j = 0; j != observations.size(); j++)
+    SetAssociations(particles[i], associations, sense_x, sense_y);
+  }// for (decltype(particles.size()) i = 0; i != particles.size(); i++)
 }
 
 void ParticleFilter::resample() {
