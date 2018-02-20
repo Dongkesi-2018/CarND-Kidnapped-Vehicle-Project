@@ -171,11 +171,12 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
           double mu_y = pred.y;
           double exponent = pow((obs_x - mu_x), 2) / (2 * pow(sig_x, 2)) + pow((obs_y - mu_y), 2) / (2 * pow(sig_y, 2));
           weight *= gauss_norm * exp(-exponent);
+          break;
         }
       }
-      particles[i].weight = weight;
-      weights[i] = weight;
     } // for (auto trans_o : trans_observations)
+    particles[i].weight = weight;
+    weights[i] = weight;
   } // for (decltype(observations.size()) j = 0; j != observations.size(); j++)
 }
 
