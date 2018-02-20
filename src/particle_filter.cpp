@@ -33,7 +33,7 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
   normal_distribution<double> dist_y(y, std_y);
   normal_distribution<double> dist_theta(theta, std_theta);
 
-  num_particles = 200;
+  num_particles = 100;
 
   for (decltype(num_particles) i = 0; i != num_particles; i++) {
     struct Particle sample_particle;
@@ -58,14 +58,14 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
   double std_y = std_pos[1];
   double std_theta = std_pos[2];
 
+  normal_distribution<double> dist_x(0, std_x);
+  normal_distribution<double> dist_y(0, std_y);
+  normal_distribution<double> dist_theta(0, std_theta);
+
   for (auto &particle : particles) {
     double &x = particle.x;
     double &y = particle.y;
     double &theta = particle.theta;
-
-    normal_distribution<double> dist_x(x, std_x);
-    normal_distribution<double> dist_y(y, std_y);
-    normal_distribution<double> dist_theta(theta, std_theta);
 
     if (fabs(yaw_rate) > 0.000001) {
       x += velocity / yaw_rate * (sin(theta + yaw_rate * delta_t) - sin(theta));
@@ -160,6 +160,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
     dataAssociation(predicted, trans_observations);
 
     // Step4: Calculate particle's weight
+    double weight = 1;
     for (auto trans_o : trans_observations) {
       int id = trans_o.id;
       double obs_x = trans_o.x;
@@ -169,10 +170,11 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
           double mu_x = pred.x;
           double mu_y = pred.y;
           double exponent = pow((obs_x - mu_x), 2) / (2 * pow(sig_x, 2)) + pow((obs_y - mu_y), 2) / (2 * pow(sig_y, 2));
-          particles[i].weight *= gauss_norm * exp(-exponent);
+          weight *= gauss_norm * exp(-exponent);
         }
       }
-      weights[i] = particles[i].weight;
+      particles[i].weight = weight;
+      weights[i] = weight;
     } // for (auto trans_o : trans_observations)
   } // for (decltype(observations.size()) j = 0; j != observations.size(); j++)
 }
