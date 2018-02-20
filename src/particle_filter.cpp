@@ -58,14 +58,10 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
   double std_y = std_pos[1];
   double std_theta = std_pos[2];
 
-  normal_distribution<double> dist_x(0, std_x);
-  normal_distribution<double> dist_y(0, std_y);
-  normal_distribution<double> dist_theta(0, std_theta);
-
   for (auto &particle : particles) {
-    double &x = particle.x;
-    double &y = particle.y;
-    double &theta = particle.theta;
+    double x = particle.x;
+    double y = particle.y;
+    double theta = particle.theta;
 
     if (fabs(yaw_rate) > 0.000001) {
       x += velocity / yaw_rate * (sin(theta + yaw_rate * delta_t) - sin(theta));
@@ -77,10 +73,14 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
       y += velocity * delta_t * sin(theta);
     }
 
+    normal_distribution<double> dist_x(x, std_x);
+    normal_distribution<double> dist_y(y, std_y);
+    normal_distribution<double> dist_theta(theta, std_theta);
+
     // Add random Gaussian noise
-    x += dist_x(gen);
-    y += dist_y(gen);
-    theta += dist_theta(gen);
+    particle.x = dist_x(gen);
+    particle.y = dist_y(gen);
+    particle.theta = dist_theta(gen);
   }
 }
 
@@ -160,7 +160,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
     dataAssociation(predicted, trans_observations);
 
     // Step4: Calculate particle's weight
-    double weight = 1;
+    double weight = 1.0;
     for (auto trans_o : trans_observations) {
       int id = trans_o.id;
       double obs_x = trans_o.x;
